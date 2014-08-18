@@ -12,7 +12,6 @@
 		background-repeat: no-repeat;
 		padding-left: 48px;
 	}
-
 	</style>
 </head>
 <body>
@@ -25,12 +24,10 @@
 	<script type="text/javascript">
 	var $cardinput = $('#checkout_card_number');
 	$('#checkout_card_number').validateCreditCard(function(result)
-	{
-		
-		console.log(result);
+	{		
+		//console.log(result);
 		if (result.card_type != null)
-		{			
-			
+		{				
 			switch (result.card_type.name)
 			{
 				case "visa":
@@ -56,6 +53,8 @@
 				case "discover":
 					$cardinput.css('background-position', '3px -186px');
 					$cardinput.addClass('card_discover');
+					break;
+
 				case "amex":
 					$cardinput.css('background-position', '3px -223px');
 					$cardinput.addClass('card_amex');
@@ -77,12 +76,9 @@
 			} else {
 				$cardinput.parent().removeClass('has-success').addClass('has-error');
 			}
-		}
-		else
-		{
+		} else {
 			$cardinput.parent().removeClass('has-success').removeClass('has-error');
 		}
-
 });
 
 </script>
