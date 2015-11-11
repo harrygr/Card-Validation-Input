@@ -1,86 +1,87 @@
 <html>
 <head>
 	<title>Card Val</title>
-	<script src="//code.jquery.com/jquery-1.11.0.min.js"></script>
-	<script type="text/javascript" src="jquery.creditCardValidator.js"></script>
-	<link rel="stylesheet" type="text/css" href="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css">
+	<link href="http://getbootstrap.com/dist/css/bootstrap.min.css" rel="stylesheet" type="text/css" />
+	<script src="http://vuejs.org/js/vue.js"></script>
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.8.3/jquery.min.js"></script>
+    <script src="jquery.payment.js"></script>
 	<style type="text/css">
-	#checkout_card_number{
-		background-image: url(cards.png);
-		background-position: 3px 3px;
-		background-size: 40px 252px; /* 89 x 560 */
-		background-repeat: no-repeat;
-		padding-left: 48px;
-	}
+		.cc-number{
+			background-image: url(cards1.svg);
+			background-position: -999px 0px;
+			background-size: 40px 252px; /* 89 x 560 */
+			background-repeat: no-repeat;
+			padding-left: 48px;
+		}
+		
+		.card-visa {
+			background-position: 3px 5px;
+		}
+		.card-mastercard {
+			background-position: 3px -41px;
+		}
+		.card-amex {
+			background-position: 3px -87px;
+		}
 	</style>
 </head>
 <body>
-	<div class="form-row col-md-8 form-group woocommerce-validated">
-		<label>Card Number <span class="required">*</span></label>
-		<input id="checkout_card_number" class="input-text form-control" type="text" size="19" maxlength="19" data-stripe="number" placeholder="1234 5678 9012 3456">
-		<span class="payment-errors required"></span>
+	<div id="app" class="container">
+		<div class="form-group" v-bind:class="{'has-success': card_is_valid}">
+			<label class="control-label">Card Number <span class="required">*</span></label>
+			<input id="checkout_card_number" class="form-control cc-number {{ card_type ? 'card-' + card_type : '' }}" type="tel" size="19" maxlength="19" v-model="cc_number" placeholder="•••• •••• •••• ••••">
+			<span class="payment-errors required"></span>
+		</div>
+
+		<div class="form-group" v-bind:class="{'has-success': expiry_is_valid}">
+        <label for="cc-expiry" class="control-label">Card expiry</label>
+        <input v-model="cc_expiry" id="cc-exp" type="tel" class="form-control cc-exp" autocomplete="cc-exp" placeholder="MM / YY" required>
+      </div>
+
+      <div class="form-group" v-bind:class="{'has-success': cvc_is_valid}">
+        <label for="cc-cvc" class="control-label">Card CVC formatting</label>
+        <input v-model="cc_cvc" id="cc-cvc" type="tel" class="form-control cc-cvc" autocomplete="off" placeholder="•••" required>
+      </div>
+
+		<p>Type: {{ card_type }}</p>
+
+		<p>Valid: {{ card_is_valid }}</p>
+		<p>Expiry Valid: {{ expiry_is_valid }}</p>
+		<p>CVC Valid: {{ cvc_is_valid }}</p>
 	</div>
 
-	<script type="text/javascript">
-	var $cardinput = $('#checkout_card_number');
-	$('#checkout_card_number').validateCreditCard(function(result)
-	{		
-		//console.log(result);
-		if (result.card_type != null)
-		{				
-			switch (result.card_type.name)
-			{
-				case "visa":
-					$cardinput.css('background-position', '3px -34px');
-					$cardinput.addClass('card_visa');
-					break;
+	<script>
+		$('input.cc-number').payment('formatCardNumber');
+		$('input.cc-exp').payment('formatCardExpiry');
+		$('input.cc-cvc').payment('formatCardCVC');
 
-				case "visa_electron":
-					$cardinput.css('background-position', '3px -72px');
-					$cardinput.addClass('card_visa_electron');
-					break;
+		new Vue({
 
-				case "mastercard":
-					$cardinput.css('background-position', '3px -110px');
-					$cardinput.addClass('card_mastercard');
-					break;
+			el: '#app',
 
-				case "maestro":
-					$cardinput.css('background-position', '3px -148px');
-					$cardinput.addClass('card_maestro');
-					break;
+			data: {
+				'cc_number': '',
+				'cc_expiry': '',
+				'cc_cvc': '',				
+			},
 
-				case "discover":
-					$cardinput.css('background-position', '3px -186px');
-					$cardinput.addClass('card_discover');
-					break;
-
-				case "amex":
-					$cardinput.css('background-position', '3px -223px');
-					$cardinput.addClass('card_amex');
-					break;
-
-				default:
-					$cardinput.css('background-position', '3px 3px');
-					break;					
-			}
-		} else {
-			$cardinput.css('background-position', '3px 3px');
-		}
-
-		// Check for valid card numbere - only show validation checks for invalid Luhn when length is correct so as not to confuse user as they type.
-		if (result.length_valid || $cardinput.val().length > 16)
-		{
-			if (result.luhn_valid) {
-				$cardinput.parent().removeClass('has-error').addClass('has-success');
-			} else {
-				$cardinput.parent().removeClass('has-success').addClass('has-error');
-			}
-		} else {
-			$cardinput.parent().removeClass('has-success').removeClass('has-error');
-		}
-});
-
+			computed: {
+				card_type: function() {
+					return $.payment.cardType(this.cc_number)
+				},
+				card_is_valid: function() {
+					return $.payment.validateCardNumber(this.cc_number);
+				},
+				expiry_is_valid: function() {
+					var expiry = $.payment.cardExpiryVal(this.cc_expiry);
+					return $.payment.validateCardExpiry(expiry);
+				},
+				cvc_is_valid: function() {
+					return $.payment.validateCardCVC(this.cc_cvc, this.card_type);
+				}
+			},				
+		});
 </script>
+
 </body>
 </html>
